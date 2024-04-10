@@ -1,4 +1,4 @@
-Projet personnel dans lequel j'ai appris à utiliser OpenGL en réalisant un moteur de rendu 3D basique.
+Projet personnel - Moteur de rendu 3D basique pour apprendre OpenGL.
 
 Librairies utilisées:
 - Glad
