@@ -106,7 +106,8 @@
     </ClInclude>
   </ItemGroup>
   <ItemGroup>
-    <None Include="lightShader.vs" />
-    <None Include="lightShader.fs" />
+    <None Include="fBoneShader.fs" />
+    <None Include="fLightShader.fs" />
+    <None Include="fVertexShader.fs" />
   </ItemGroup>
 </Project>

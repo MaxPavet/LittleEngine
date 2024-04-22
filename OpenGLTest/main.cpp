@@ -18,7 +18,7 @@
 #include <filesystem>
 
 void framebuffer_size_callback(GLFWwindow* window, int width, int height);
-void processGrosseput(GLFWwindow* window, Animator* animator);
+void processInput(GLFWwindow* window, Animator* animator);
 void mouse_callback(GLFWwindow* window, double xpos, double ypos);
 void scroll_callback(GLFWwindow* window, double xoffset, double yoffset);
 
@@ -82,12 +82,13 @@ int main()
 
     glEnable(GL_DEPTH_TEST);
     
-    stbi_set_flip_vertically_on_load(true);
+    stbi_set_flip_vertically_on_load(false);
 
-    Shader ourShader("vshader.vs", "lightShader.fs");
+    Shader boneShader("vBoneShader.vs", "fBoneShader.fs");
+    Shader vertexShader("vVertexShader.vs", "fVertexShader.fs");
 
-    Model ourModel(filesystem::path("model/untitledAnime.dae").string());
-    Animation animation(filesystem::path("model/untitledAnime.dae").string(), &ourModel);
+    Model ourModel(filesystem::path("model/cubeAnimation.dae").string());
+    Animation animation(filesystem::path("model/cubeAnimation.dae").string(), &ourModel);
     Animator animator(&animation);
 
     animator.PlayAnimation(&animation);
@@ -98,7 +99,7 @@ int main()
         deltaTime = currentFrame - lastFrame;
         lastFrame = currentFrame;
 
-        processGrosseput(window, &animator);
+        processInput(window, &animator);
 
         glClearColor(0.1f, 0.1f, 0.1f, 1.0f);
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
@@ -106,26 +107,42 @@ int main()
         //ImGui_ImplOpenGL3_NewFrame();
         //ImGui_ImplGlfw_NewFrame();
         //ImGui::NewFrame();
-        //ImGui::ShowDemoWindow(); // Show demo window!
-
-        ourShader.use();
-        
-        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), width / height, 0.1f, 100.0f);
-        glm::mat4 view = camera.GetViewMatrix();
-        ourShader.setMat4("projection", projection);
-        ourShader.setMat4("view", view);
+        //ImGui::ShowDemoWindow();
 
         animator.UpdateAnimation(deltaTime);
 
+        vertexShader.use();
+        glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), width / height, 0.1f, 100.0f);
+        glm::mat4 view = camera.GetViewMatrix();
+        vertexShader.setMat4("view", view);
+        vertexShader.setMat4("projection", projection);
+
+        // pass bones matrices to the shader
         auto transforms = animator.GetFinalBoneMatrices();
         for (int i = 0; i < transforms.size(); ++i)
-            ourShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+            vertexShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
 
         glm::mat4 model = glm::mat4(1.0f);
-        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f)); // translate it down so it's at the center of the scene
-        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));	// it's a bit too big for our scene, so scale it down
-        ourShader.setMat4("model", model);
-        ourModel.Draw(ourShader);
+        model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
+        model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
+        vertexShader.setMat4("model", model);
+
+        glLineWidth(3.0f);
+        glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
+        ourModel.Draw(vertexShader);
+
+        boneShader.use();
+        
+        boneShader.setMat4("projection", projection);
+        boneShader.setMat4("view", view);
+
+        for (int i = 0; i < transforms.size(); ++i)
+            boneShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+
+        boneShader.setMat4("model", model);
+
+        glPolygonMode(GL_FRONT, GL_FILL);
+        ourModel.Draw(boneShader);
 
         //ImGui::Render();
         //ImGui_ImplOpenGL3_RenderDrawData(ImGui::GetDrawData());
@@ -145,7 +162,7 @@ void framebuffer_size_callback(GLFWwindow* window, int width, int height)
     glViewport(0, 0, width, height);
 }
 
-void processGrosseput(GLFWwindow* window, Animator* animator)
+void processInput(GLFWwindow* window, Animator* animator)
 {
     if (glfwGetKey(window, GLFW_KEY_ESCAPE) == GLFW_PRESS)
         glfwSetWindowShouldClose(window, true);
