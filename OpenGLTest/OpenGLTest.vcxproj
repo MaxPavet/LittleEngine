@@ -176,7 +176,10 @@
   <ItemGroup>
     <None Include="fBoneShader.fs" />
     <None Include="fLightShader.fs" />
-    <None Include="fVertexShader.fs" />
+    <None Include="fNormalShader.fs" />
+    <None Include="fWireframeShader.fs" />
+    <None Include="gNormalShader.gs" />
+    <None Include="vNormalShader.vs" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

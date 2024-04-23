@@ -85,7 +85,8 @@ int main()
     stbi_set_flip_vertically_on_load(false);
 
     Shader boneShader("vBoneShader.vs", "fBoneShader.fs");
-    Shader vertexShader("vVertexShader.vs", "fVertexShader.fs");
+    Shader wireframeShader("vWireframeShader.vs", "fWireframeShader.fs");
+    Shader normalShader("vNormalShader.vs", "gNormalShader.gs", "fNormalShader.fs");
 
     Model ourModel(filesystem::path("model/cubeAnimation.dae").string());
     Animation animation(filesystem::path("model/cubeAnimation.dae").string(), &ourModel);
@@ -111,25 +112,37 @@ int main()
 
         animator.UpdateAnimation(deltaTime);
 
-        vertexShader.use();
+        wireframeShader.use();
         glm::mat4 projection = glm::perspective(glm::radians(camera.Zoom), width / height, 0.1f, 100.0f);
         glm::mat4 view = camera.GetViewMatrix();
-        vertexShader.setMat4("view", view);
-        vertexShader.setMat4("projection", projection);
+        wireframeShader.setMat4("view", view);
+        wireframeShader.setMat4("projection", projection);
 
         // pass bones matrices to the shader
         auto transforms = animator.GetFinalBoneMatrices();
         for (int i = 0; i < transforms.size(); ++i)
-            vertexShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+            wireframeShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
 
         glm::mat4 model = glm::mat4(1.0f);
         model = glm::translate(model, glm::vec3(0.0f, 0.0f, 0.0f));
         model = glm::scale(model, glm::vec3(0.5f, 0.5f, 0.5f));
-        vertexShader.setMat4("model", model);
+        wireframeShader.setMat4("model", model);
 
         glLineWidth(3.0f);
         glPolygonMode(GL_FRONT_AND_BACK, GL_LINE);
-        ourModel.Draw(vertexShader);
+        ourModel.Draw(wireframeShader);
+
+        normalShader.use();
+
+        normalShader.setMat4("projection", projection);
+        normalShader.setMat4("view", view);
+
+        for (int i = 0; i < transforms.size(); ++i)
+            normalShader.setMat4("finalBonesMatrices[" + std::to_string(i) + "]", transforms[i]);
+
+        normalShader.setMat4("model", model);
+
+        ourModel.Draw(normalShader);
 
         boneShader.use();
         

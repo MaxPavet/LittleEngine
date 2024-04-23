@@ -108,6 +108,9 @@
   <ItemGroup>
     <None Include="fBoneShader.fs" />
     <None Include="fLightShader.fs" />
-    <None Include="fVertexShader.fs" />
+    <None Include="fWireframeShader.fs" />
+    <None Include="gNormalShader.gs" />
+    <None Include="vNormalShader.vs" />
+    <None Include="fNormalShader.fs" />
   </ItemGroup>
 </Project>
